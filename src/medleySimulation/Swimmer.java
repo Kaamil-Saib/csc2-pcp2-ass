@@ -6,6 +6,7 @@ package medleySimulation;
 import java.awt.Color;
 
 import java.util.Random;
+
 import java.util.concurrent.CountDownLatch;
 
 public class Swimmer extends Thread {

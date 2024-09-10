@@ -6,8 +6,9 @@ package medleySimulation;
 import java.awt.Color;
 
 import java.util.Random;
-
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Swimmer extends Thread {
@@ -24,12 +25,16 @@ public class Swimmer extends Thread {
 	private int team; // team ID
 	private GridBlock start;
 	private CountDownLatch latch; // latch to synchronise start
-	private static AtomicInteger[] swimmerOrderArray = new AtomicInteger[10]; // AtomicInteger array to track swimmer
-																				// order
+
+	private static AtomicInteger[] swimmerOrderArray = new AtomicInteger[10]; // To track swimmer order
+	private static AtomicInteger[] teamArrivalCount = new AtomicInteger[10]; // To track arrivals per team
+	private static Object[] teamArrivalLocks = new Object[10]; // Locks for each team
 
 	static {
-		for (int i = 0; i < swimmerOrderArray.length; i++) {
+		for (int i = 0; i < 10; i++) {
 			swimmerOrderArray[i] = new AtomicInteger(1); // All teams start with swimmer 1
+			teamArrivalCount[i] = new AtomicInteger(0); // Initialize arrival count to 0
+			teamArrivalLocks[i] = new Object(); // Initialize locks
 		}
 	}
 
@@ -140,7 +145,7 @@ public class Swimmer extends Thread {
 			// System.out.println("Thread "+this.ID + " swimming " + currentBlock.getX() + "
 			// " +currentBlock.getY() );
 			sleep((int) (movingSpeed * swimStroke.strokeTime)); // swim
-			System.out.println("Thread " + this.ID + " swimming  at speed" + movingSpeed);
+			System.out.println("Thread " + this.ID + " swimming at speed" + movingSpeed);
 		}
 
 		while ((boolean) ((currentBlock.getY()) != (StadiumGrid.start_y - 1))) {
@@ -175,17 +180,18 @@ public class Swimmer extends Thread {
 
 	public void run() {
 		try {
-			// Wait for the start button to be pressed
-			latch.await();
+
+			latch.await();// Wait for the start button to be pressed
 			// Swimmer arrives
 			sleep(movingSpeed + (rand.nextInt(10))); // arriving takes a while
 			myLocation.setArrived();
 
 			enterStadium();
-			// Wait for your turn based on swimmer order
-			waitForTurn();
+
+			waitForTurn();// Wait for your turn based on swimmer order
 
 			goToStartingBlocks();
+
 			synchronized (swimmerOrderArray[team]) {
 				// Increment the swimmer order for the team, allowing the next swimmer to start
 				swimmerOrderArray[team].incrementAndGet();
@@ -202,7 +208,11 @@ public class Swimmer extends Thread {
 			}
 
 		} catch (InterruptedException e1) { // do nothing
+		} catch (Exception e) {
+			// System.out.println("Exception in Thread " + ID + ": " + e.getMessage());
+
 		}
+
 	}
 
 }

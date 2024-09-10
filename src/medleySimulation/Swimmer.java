@@ -6,9 +6,7 @@ package medleySimulation;
 import java.awt.Color;
 
 import java.util.Random;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Swimmer extends Thread {

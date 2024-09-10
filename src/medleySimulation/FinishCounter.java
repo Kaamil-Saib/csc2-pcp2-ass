@@ -5,9 +5,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FinishCounter {
-	private AtomicBoolean firstAcrossLine; // flag
-	private final AtomicInteger winner; // who won
-	private AtomicInteger winningTeam; // counter for patrons who have left the club
+	private AtomicBoolean firstAcrossLine; // flag - Atomic variable to prevent data races
+	private final AtomicInteger winner; // who won - Atomic variable to prevent data races
+	private AtomicInteger winningTeam; // counter for patrons who have left the club - Atomic variable to prevent data
+										// races
 
 	FinishCounter() {
 		firstAcrossLine = new AtomicBoolean(true);// no-one has won at start

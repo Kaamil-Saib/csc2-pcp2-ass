@@ -16,9 +16,9 @@ public class SwimTeam extends Thread {
 
 	public static final int sizeOfTeam = 4;
 
-	SwimTeam(int ID, FinishCounter finish, PeopleLocation[] locArr) {
+	SwimTeam(int ID, FinishCounter finish, PeopleLocation[] locArr, CountDownLatch latch) {
 		this.teamNo = ID;
-		this.latch = new CountDownLatch(sizeOfTeam);
+		this.latch = latch; // latch for synchronization
 
 		swimmers = new Swimmer[sizeOfTeam];
 		SwimStroke[] strokes = SwimStroke.values(); // Get all enum constants

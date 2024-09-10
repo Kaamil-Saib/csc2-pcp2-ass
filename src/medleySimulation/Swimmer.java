@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.util.Random;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Swimmer extends Thread {
 
@@ -22,7 +23,15 @@ public class Swimmer extends Thread {
 	private int ID; // thread ID
 	private int team; // team ID
 	private GridBlock start;
-	private CountDownLatch latch;
+	private CountDownLatch latch; // latch to synchronise start
+	private static AtomicInteger[] swimmerOrderArray = new AtomicInteger[10]; // AtomicInteger array to track swimmer
+																				// order
+
+	static {
+		for (int i = 0; i < swimmerOrderArray.length; i++) {
+			swimmerOrderArray[i] = new AtomicInteger(1); // All teams start with swimmer 1
+		}
+	}
 
 	public enum SwimStroke {
 		Backstroke(1, 2.5, Color.black),
@@ -155,18 +164,34 @@ public class Swimmer extends Thread {
 		}
 	}
 
+	private void waitForTurn() throws InterruptedException {
+		synchronized (swimmerOrderArray[team]) {
+			// Check if its swimmers turn based on the order in the team
+			while (swimmerOrderArray[team].get() != swimStroke.getOrder()) {
+				swimmerOrderArray[team].wait(); // Wait until the previous swimmer is done }
+			}
+		}
+	}
+
 	public void run() {
 		try {
-
+			// Wait for the start button to be pressed
+			latch.await();
 			// Swimmer arrives
 			sleep(movingSpeed + (rand.nextInt(10))); // arriving takes a while
 			myLocation.setArrived();
+
 			enterStadium();
+			// Wait for your turn based on swimmer order
+			waitForTurn();
 
 			goToStartingBlocks();
-
+			synchronized (swimmerOrderArray[team]) {
+				// Increment the swimmer order for the team, allowing the next swimmer to start
+				swimmerOrderArray[team].incrementAndGet();
+				swimmerOrderArray[team].notifyAll(); // Notify waiting swimmers that they can check their turn
+			}
 			dive();
-
 			swimRace();
 			if (swimStroke.order == 4) {
 				finish.finishRace(ID, team); // fnishline
